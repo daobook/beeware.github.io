@@ -19,12 +19,7 @@ from lektor.utils import build_url
 from feedgenerator.django.utils.feedgenerator import Atom1Feed
 from markupsafe import escape
 
-PY2 = sys.version_info[0] == 2
-
-if PY2:
-    text_type = unicode
-else:
-    text_type = str
+text_type = unicode if (PY2 := sys.version_info[0] == 2) else str
 
 
 class AtomFeedSource(VirtualSourceObject):
@@ -35,12 +30,11 @@ class AtomFeedSource(VirtualSourceObject):
 
     @property
     def path(self):
-        return self.parent.path + '@atom/' + self.feed_id
+        return f'{self.parent.path}@atom/{self.feed_id}'
 
     @property
     def url_path(self):
-        p = self.plugin.get_atom_config(self.feed_id, 'url_path')
-        if p:
+        if p := self.plugin.get_atom_config(self.feed_id, 'url_path'):
             return p
 
         return build_url([self.parent.url_path, self.filename])
@@ -57,9 +51,7 @@ class AtomFeedSource(VirtualSourceObject):
 
 
 def get(item, field, default=None):
-    if field in item:
-        return item[field]
-    return default
+    return item[field] if field in item else default
 
 
 def get_id(s):
@@ -68,9 +60,7 @@ def get_id(s):
 
 
 def get_item_title(item, field):
-    if field in item:
-        return item[field]
-    return item.record_label
+    return item[field] if field in item else item.record_label
 
 
 def get_item_body(item, field):
@@ -81,10 +71,7 @@ def get_item_body(item, field):
 
 
 def get_item_updated(item, field):
-    if field in item:
-        rv = item[field]
-    else:
-        rv = datetime.utcnow()
+    rv = item[field] if field in item else datetime.utcnow()
     if isinstance(rv, date) and not isinstance(rv, datetime):
         rv = datetime(*rv.timetuple()[:3])
     return rv
@@ -124,7 +111,7 @@ class AtomFeedBuilderProgram(BuildProgram):
         if feed_source.item_model:
             items = items.filter(F._model == feed_source.item_model)
 
-        order_by = '-' + feed_source.item_date_field
+        order_by = f'-{feed_source.item_date_field}'
         items = items.order_by(order_by).limit(int(feed_source.limit))
 
         for item in items:

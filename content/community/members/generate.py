@@ -15,7 +15,7 @@ def generate(filename, basedir):
             email = line[4]
             join_date = line[6]
 
-            uid = hashlib.sha1(email.encode()).hexdigest()[0:8]
+            uid = hashlib.sha1(email.encode()).hexdigest()[:8]
 
             if not got_header:
                 if name != 'Buyer Name':
